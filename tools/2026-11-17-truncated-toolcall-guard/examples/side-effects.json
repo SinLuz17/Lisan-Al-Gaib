@@ -1,0 +1,7 @@
+{
+  "refund": "write",
+  "close_tickets": "write",
+  "send_email": "write",
+  "search_docs": "read",
+  "get_order": "read"
+}

@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "finishReason": "MALFORMED_FUNCTION_CALL",
+      "content": {
+        "parts": [
+          {
+            "functionCall": {
+              "name": "close_tickets",
+              "args": {}
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "candidatesTokenCount": 512
+  }
+}
