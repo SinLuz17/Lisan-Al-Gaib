@@ -350,8 +350,11 @@ class CliTests(unittest.TestCase):
 
     def test_bad_target_is_a_usage_error(self):
         path = self._write([{"name": "a", "parameters": SIMPLE}])
-        with self.assertRaises(KeyError):
-            main(["lint", path, "--targets", "cohere"])
+        self.assertEqual(main(["lint", path, "--targets", "cohere"]), 2)
+
+    def test_unknown_tool_is_a_usage_error(self):
+        path = self._write([{"name": "a", "parameters": SIMPLE}])
+        self.assertEqual(main(["lint", path, "--tool", "nope"]), 2)
 
 
 if __name__ == "__main__":
