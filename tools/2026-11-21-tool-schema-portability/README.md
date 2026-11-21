@@ -102,7 +102,7 @@ python -m wirecheck profiles
 python -m unittest discover -s tests -v
 ```
 
-退出码：`0` 没有 blocker；`1` 有 blocker（默认），或 `--fail-on degraded` 时出现损失。`2` 是参数错误。
+退出码：`0` 没有 blocker；`1` 有 blocker（默认），或 `--fail-on degraded` 时出现损失；`2` 是用法错误（写错的 target、不存在的工具名、读不到的文件）。
 
 输入接受三种常见形状：OpenAI 的 `{"tools":[{"type":"function","function":{...}}]}`、`[{"name":...,"parameters":...}]`、以及 `{"工具名": {json schema}}`。
 
@@ -218,7 +218,7 @@ wirecheck/
 examples/
   ops-tools.json
 tests/
-  test_wirecheck.py   # 40 个用例
+  test_wirecheck.py   # 41 个用例
 ```
 
 ## 7. 局限与取舍
