@@ -161,4 +161,12 @@ def main(argv: Sequence[str] = None) -> int:
     if not getattr(args, "func", None):
         parser.print_help()
         return 2
-    return args.func(args)
+    try:
+        return args.func(args)
+    except KeyError as exc:
+        # A mistyped --targets should read like a usage error, not a traceback.
+        print(exc.args[0] if exc.args else exc, file=sys.stderr)
+        return 2
+    except (ValueError, OSError) as exc:
+        print(exc, file=sys.stderr)
+        return 2
