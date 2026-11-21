@@ -70,6 +70,10 @@ python -m toolcall_guard audit examples/traces.jsonl --side-effects examples/sid
 
 同一时期还有两个判断方式与本工具一致的实现，可作为旁证：Go 写的 `uncut` 把 `finish_reason` 为 `length` / `max_tokens` 直接当错误处理，不接受半截结果；Pi 的 agent loop 在检测到输出上限截断时，让同一批 tool call 全部失败。区别在于它们各自绑在自己的 harness 里，且都不处理已经落库的历史 trace。
 
+这类问题没有随着前面两处修复消失。2026-11-09，Swarms 仓库自己报了一例（#3339）：handoff 的 tool call 被 `max_tokens` 截断后，`_arguments()` 里一句裸 `json.loads`，抛出一个光秃秃的 `JSONDecodeError`，调用方看到的是"JSON 解析失败"，既不知道原因也没法自愈；修复 PR #3344 到 2026-11-21 仍未合并。这个变体值得单独看一眼——它没有把截断当成功（比 Langroid 那例好），但它把"这一轮没写完"回报成了"参数写错了"，模型据此只会把同样的内容再发一次。
+
+顺带一提，AgentScope 的 #3880 到 2026-11-18 还挂在 awaiting-review，未合并。所以"上游已经修好"这个前提，目前只对 Langroid 与 Heym 成立。
+
 ---
 
 ## 3. 本工具的方案
@@ -91,6 +95,8 @@ python -m toolcall_guard audit examples/traces.jsonl --side-effects examples/sid
 ### 3.2 顺带解决的两个小问题
 
 - **拒绝信息不能说谎。** 文案必须明确写 "was NOT executed and nothing was changed"。Heym 那例里模型之所以回 "Done"，是因为工具结果让它以为成功了。
+
+  这条在修复合并之后又踩了一次，值得当成反例记住。Heym #903 的拒绝文案写的是 "Raise maxTokens on this node (now the provider default)"：可 Agent 面板上没有这个字段，而 Messages transport 的默认值写死在 8192，用户按提示什么也改不了。到 #904（11-15 修）才把"到底是哪个上限、去哪儿改"说清楚。拒绝文案本身是一条独立的代码路径，它也会错。
 - **拒绝记录里不存参数值。** 被截断的调用，其"已经到达的那部分"同样可能含密钥；而拒绝路径天然是日志路径。所以 journal 里只留长度、12 位摘要、已闭合的键名。同时提供一个容错的 JSON 前缀扫描器，能告诉你"模型写完了 `order_id`，在写 `amount` 时被砍"——这个信息足够定位问题，又不泄漏值。
 
 ### 3.3 审计：把已经发生的事故找出来
@@ -245,6 +251,7 @@ tests/
 - **`on_unknown="deny"` 会带来误拒。** 这是有意的默认值：接新 provider、或框架把 stop 字段弄丢时，宁可拒一次也不要盲执行。确认链路可靠后可改 `allow`。
 - **`atomic_turn=False` 是妥协模式。** 它按"参数是否可解析"放行，等于在 1.3 节列出的三个 transport 上重新失去防线，只适合明确接受该风险的场景。
 - **需要拿到原始 payload。** 不少框架在归一化 message 时把 stop reason 丢了。若你的框架如此，闸门应挂在 provider 适配层（拿到 response 的第一现场），而不是工具分发处。这也是它被做成独立库而非框架插件的原因。
+- **文案只说"为什么"，不说"该改哪个旋钮"。** payload 里一般不带本轮的预算值，所以拒绝信息不会给出具体数字。#904 那个教训的方向是相反的：让人去改一个不存在的字段，比不说更糟。要提示具体上限，得在调用侧把预算一并传进来。
 
 ---
 
@@ -263,5 +270,7 @@ tests/
 - 单框架内正确处理 `max_tokens` 的参考实现（作为对照）：<https://github.com/hannnnnnnny/GuardRun/blob/main/docs/architecture.md>
 - `json_repair`：<https://github.com/mangiucugna/json_repair>
 - AgentScope 的同类修复 PR（opt-in、以解析失败为条件）：<https://github.com/agentscope-ai/agentscope/pull/3880>
+- Swarms #3339（第三例：截断后 `json.loads` 抛裸 `JSONDecodeError`）与修复 PR #3344：<https://github.com/kyegomez/swarms/issues/3339>、<https://github.com/kyegomez/swarms/pull/3344>
+- Heym #904（修复后的拒绝文案指了一个用户改不了的字段）：<https://github.com/heymrun/heym/issues/904>
 - Go agent harness `uncut` 把 length 当错误处理：<https://www.bytesizego.com/blog/how-uncut-handles-truncated-llm-output-and-crash-safe-sessio>
 - Pi agent-loop 源码解读（截断时整批 tool call 失败）：<https://juejin.cn/post/7707151816107393075>
