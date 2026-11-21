@@ -1,0 +1,112 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "refund_order",
+        "description": "Refund an order, in full or line by line.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "pattern": "^A-[0-9]{4}$"
+            },
+            "amount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5000
+            },
+            "currency": {
+              "type": "string",
+              "enum": ["USD", "EUR", "CNY"]
+            },
+            "line_items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LineItem"
+              }
+            },
+            "meta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": ["order_id", "amount"],
+          "$defs": {
+            "LineItem": {
+              "type": "object",
+              "properties": {
+                "sku": {"type": "string"},
+                "qty": {"type": "integer", "minimum": 1}
+              },
+              "required": ["sku", "qty"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_ticket",
+        "description": "Open a support ticket. The attachment is either an uploaded file or a URL.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string", "maxLength": 120},
+            "severity": {"type": "integer", "enum": [1, 2, 3]},
+            "attachment": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {"file_id": {"type": "string"}},
+                  "required": ["file_id"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "url": {"type": "string", "format": "uri"},
+                    "expires_at": {"type": "string", "format": "date-time"}
+                  },
+                  "required": ["url"]
+                }
+              ]
+            }
+          },
+          "required": ["title", "severity"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "close_tickets",
+        "description": "Close tickets matching the filters. Every filter is optional.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "customer_id": {"type": "string"},
+            "older_than_days": {"type": "integer", "minimum": 0},
+            "reason": {"type": "string", "maxLength": 200}
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_docs",
+        "description": "Search the internal documentation.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {"type": "string"},
+            "limit": {"type": "integer"}
+          },
+          "required": ["query"]
+        }
+      }
+    }
+  ]
+}
