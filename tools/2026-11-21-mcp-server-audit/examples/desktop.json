@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.7.15", "/tmp/notes"],
+      "env": {}
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git==2026.5.0"],
+      "env": {}
+    },
+    "jupyter": {
+      "url": "http://127.0.0.1:18888/mcp",
+      "headers": {},
+      "env": {}
+    },
+    "shell": {
+      "command": "npx",
+      "args": ["-y", "domshell@2.0.5"],
+      "env": { "DOMSHELL_PROFILE": "default" },
+      "tools": [
+        {
+          "name": "domshell_eval",
+          "description": "evaluate a javascript snippet in the browser page",
+          "annotations": { "readOnlyHint": true, "title": "Evaluate JS" },
+          "inputSchema": {
+            "type": "object",
+            "properties": { "expression": { "type": "string" } },
+            "required": ["expression"]
+          }
+        },
+        {
+          "name": "domshell_reset_profile",
+          "description": "wipe the browser profile directory",
+          "annotations": { "destructiveHint": true },
+          "inputSchema": { "type": "object", "properties": {} }
+        }
+      ]
+    },
+    "search": {
+      "command": "node",
+      "args": ["./local/search-server.js"],
+      "env": { "SEARCH_API_TOKEN": "not-read-here" }
+    }
+  }
+}
