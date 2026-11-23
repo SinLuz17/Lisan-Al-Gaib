@@ -1,4 +1,5 @@
-"""advisory 快照：2026-11-21 手工整理，每条带来源。
+"""advisory 快照：2026-11-21 手工整理，每条带来源；11-23 又补了四条 11-19
+到 11-20 披露的（其中两条进了 VulnCheck 的在野利用清单）。
 
 只收有公开来源的条目；新的披露往这儿加。范围声明用 affected spec，
 日期式与语义式版本混在一个生态里是常态（见 filesystem 那条）。
@@ -128,6 +129,62 @@ ADVISORIES: List[Dict[str, Any]] = [
         "fixed": "0.5.7",
         "refs": [
             "https://mindpattern.ai/s/2026-11-20-mcp-tools-guard-the-path-their-authors-pictured-and-leave-the-next-one-open",
+        ],
+    },
+    {
+        "package": "mcp",
+        "ecosystem": "pypi",
+        "summary": "HTTP transports route requests by session id alone: a different valid "
+                   "bearer token plus a known session id can inject JSON-RPC into someone "
+                   "else's session and read the replies (CVE-2026-52869); exploited, "
+                   "VulnCheck canary-flagged on 2026-11-20",
+        "affected": ["<1.27.2"],
+        "fixed": "1.27.2",
+        # 1.27.2 只关这一个门，1.30.0/2.2.0 才把下面那条 OAuth 的也关上
+        "note": "session ids are UUIDs but leak via logs/traffic; upgrade past 1.30.0, not just to 1.27.2",
+        "refs": [
+            "https://www.dugganusa.com/post/vulncheck-canaries-mcp-python-sdk-mcphub-ispconfig",
+        ],
+    },
+    {
+        "package": "mcp",
+        "ecosystem": "pypi",
+        "summary": "OAuth client: issuer not validated on every discovery path and stored "
+                   "credentials not bound to an issuer, so a malicious server picks where "
+                   "your token endpoint is (CVE-2026-115563); client-side, stdio not affected",
+        "affected": [">=1.9.1,<1.29.2", ">=2.0.0,<=2.1.1"],
+        "fixed": "1.30.0 / 2.2.0",
+        "note": "upgrading alone is not enough: set issuer= on machine-to-machine providers and clear stored registrations",
+        "refs": [
+            "https://agentbeam.com/blog/mcp-python-sdk-oauth-credential-leak-cve-2026-115563",
+        ],
+    },
+    {
+        "package": "@samanhappy/mcphub",
+        "ecosystem": "npm",
+        "summary": "add/edit server endpoints check login but not admin role and don't "
+                   "restrict the command: any logged-in account registers /bin/sh and the "
+                   "hub runs it at once, commonly as root (CVE-2026-79748, CVSS 9.9); "
+                   "exploited, VulnCheck canary-flagged on 2026-11-20",
+        "affected": ["<=0.12.14"],
+        "fixed": "0.12.15",
+        "note": "edit endpoint also had no ownership check; close self-registration until patched",
+        "refs": [
+            "https://www.dugganusa.com/post/vulncheck-canaries-mcp-python-sdk-mcphub-ispconfig",
+        ],
+    },
+    {
+        "package": "@connorbritain/mssql-mcp-core",
+        "ecosystem": "npm",
+        "summary": "table names, column names and a free-form whereClause interpolated "
+                   "straight into T-SQL batches; stacked statements, and with xp_cmdshell "
+                   "on, OS command execution (GHSA-2m9m-6cr5-9x25); a stateFilter sink in "
+                   "the nominally read-only tier stays reachable even with READONLY=true",
+        "affected": ["<0.6.0"],
+        "fixed": "0.6.0",
+        "note": "free-form whereClause removed as a breaking change; reader/writer 0.5.0 and server 0.6.0 depend on core 0.6.0",
+        "refs": [
+            "https://theagentictimes.org/vulnerabilities/sql-injection-flaw-hits-mssql-mcp-core-database-agent-tools",
         ],
     },
 ]

@@ -138,6 +138,28 @@ class Advisories(unittest.TestCase):
         for adv in __import__("mcpaudit.advisories", fromlist=["ADVISORIES"]).ADVISORIES:
             self.assertTrue(adv["refs"], adv["package"])
 
+    def test_mcp_pypi_two_advisories(self):
+        # 1.26.0 同时踩两条：会话劫持和 OAuth 客户端
+        hits = match("mcp", "pypi", "1.26.0")
+        self.assertEqual(len(hits), 2)
+        # 1.27.2 只关了会话那扇门，OAuth 那条还会命中
+        hits = match("mcp", "pypi", "1.27.2")
+        self.assertEqual(len(hits), 1)
+        self.assertIn("CVE-2026-115563", hits[0]["summary"])
+        # 两条都关完
+        self.assertEqual(match("mcp", "pypi", "1.30.0"), [])
+        self.assertEqual(match("mcp", "pypi", "2.2.0"), [])
+
+    def test_mcphub_hit_and_clean(self):
+        hits = match("@samanhappy/mcphub", "npm", "0.12.14")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(match("@samanhappy/mcphub", "npm", "0.12.15"), [])
+
+    def test_mssql_hit_and_clean(self):
+        hits = match("@connorbritain/mssql-mcp-core", "npm", "0.5.9")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(match("@connorbritain/mssql-mcp-core", "npm", "0.6.0"), [])
+
 
 class Labels(unittest.TestCase):
     EVAL = {
