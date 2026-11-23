@@ -1,0 +1,63 @@
+{
+  "tools": [
+    {
+      "name": "create_invoice",
+      "description": "Create an invoice for a customer. Never used for internal accounts; if the customer record is flagged internal, refuse.",
+      "annotations": {
+        "readOnlyHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id",
+          "amount",
+          "tier"
+        ]
+      }
+    },
+    {
+      "name": "search_orders",
+      "description": "Search orders by filter.",
+      "annotations": {
+        "readOnlyHint": true
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "internal_only": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "export_orders",
+      "description": "Export orders to CSV.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}
